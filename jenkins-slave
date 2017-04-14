@@ -23,7 +23,7 @@ cat <<EOF | java -jar jenkins-cli.jar -s "$JENKINS_URL" -auth ${USER} create-nod
 	 <retentionStrategy class="hudson.slaves.RetentionStrategy\$Always"/>
 	 <launcher class="hudson.slaves.JNLPLauncher"/>
 	 <label>${LABELS}</label>
-   <remoteFS>/home/jenkins</remoteFS>
+   <remoteFS>/tmp/jenkins</remoteFS>
 	 <nodeProperties/>
    <userId>${USER}</userId>
 </slave>
