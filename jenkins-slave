@@ -14,7 +14,7 @@ while [ true ]; do
 	 sleep 60
  fi
 done
-cat <<EOF | java -jar jenkins-cli.jar -s "$JENKINS_URL" create-node $JENKINS_AGENT_NAME
+cat <<EOF | java -jar jenkins-cli.jar -s "$JENKINS_URL" -auth ${USER} create-node $JENKINS_AGENT_NAME
 <slave>
 	 <name>${JENKINS_AGENT_NAME}</name>
 	 <description></description>
