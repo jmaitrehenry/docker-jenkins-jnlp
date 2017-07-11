@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [[ ! -z $DOCKER_PRELOAD_IMAGES ]]; then
-  preload_docker_images $DOCKER_PRELOAD_IMAGES &
+  preload-docker-images $DOCKER_PRELOAD_IMAGES &
 fi;
 
 # Download slave.jar. This ensures that everytime this daemon is loaded, we get the correct slave.jar
