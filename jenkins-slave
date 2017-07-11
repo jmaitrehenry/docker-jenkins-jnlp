@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+if [[ ! -z $DOCKER_PRELOAD_IMAGES ]]; then
+  preload_docker_images $DOCKER_PRELOAD_IMAGES &
+fi;
+
+
+exit
 # Download slave.jar. This ensures that everytime this daemon is loaded, we get the correct slave.jar
 # from the Master. We loop endlessly to get the jar, so that if we start before networking, we ensure
 # the jar gets loaded anyway.
@@ -9,29 +15,28 @@ while [ true ]; do
  curl -s --url $JENKINS_URL/jnlpJars/jenkins-cli.jar --insecure --output jenkins-cli.jar
  RESULT=$?
  if [ $RESULT -eq 0 ]; then
-	 break
+     break
  else
-	 sleep 60
+     sleep 60
  fi
 done
 cat <<EOF | java -jar jenkins-cli.jar -s "$JENKINS_URL" -auth ${USER} create-node $JENKINS_AGENT_NAME
 <slave>
-	 <name>${JENKINS_AGENT_NAME}</name>
-	 <description></description>
-	 <numExecutors>${EXECUTORS}</numExecutors>
-	 <mode>NORMAL</mode>
-	 <retentionStrategy class="hudson.slaves.RetentionStrategy\$Always"/>
-	 <launcher class="hudson.slaves.JNLPLauncher"/>
-	 <label>${LABELS}</label>
+     <name>${JENKINS_AGENT_NAME}</name>
+     <description></description>
+     <numExecutors>${EXECUTORS}</numExecutors>
+     <mode>NORMAL</mode>
+     <retentionStrategy class="hudson.slaves.RetentionStrategy\$Always"/>
+     <launcher class="hudson.slaves.JNLPLauncher"/>
+     <label>${LABELS}</label>
    <remoteFS>/tmp/jenkins</remoteFS>
-	 <nodeProperties/>
+     <nodeProperties/>
    <userId>${USER}</userId>
 </slave>
 EOF
 
 #Getting API Token
 JENKINS_SECRET="$(curl -s -u $USER $JENKINS_URL/computer/$JENKINS_AGENT_NAME/ | grep -Eo 'slave-agent.jnlp -secret ([a-z0-9]+)' | cut -d ' ' -f 3)"
-echo "Jenkins Slave Api Token:" $JENKINS_AGENT_NAME $JENKINS_SECRET
 
 # The MIT License
 #
@@ -62,19 +67,28 @@ echo "Jenkins Slave Api Token:" $JENKINS_AGENT_NAME $JENKINS_SECRET
 # * JENKINS_SECRET : agent secret, if not set as an argument
 # * JENKINS_AGENT_NAME : agent name, if not set as an argument
 
+if [ $# -eq 1 ]; then
 
-# if -tunnel is not provided try env vars
-if [ ! -z "$JENKINS_TUNNEL" ]; then
-    TUNNEL="-tunnel $JENKINS_TUNNEL"
-fi
+    # if `docker run` only has one arguments, we assume user is running alternate command like `bash` to inspect the image
+    exec "$@"
 
-if [ -n "$JENKINS_URL" ]; then
-    URL="-url $JENKINS_URL"
-fi
+else
 
-if [ -z "$JNLP_PROTOCOL_OPTS" ]; then
-    echo "Warning: JnlpProtocol3 is disabled by default, use JNLP_PROTOCOL_OPTS to alter the behavior"
-    JNLP_PROTOCOL_OPTS="-Dorg.jenkinsci.remoting.engine.JnlpProtocol3.disabled=true"
+    # if -tunnel is not provided try env vars
+    if [[ "$@" != *"-tunnel "* ]]; then
+        if [ ! -z "$JENKINS_TUNNEL" ]; then
+            TUNNEL="-tunnel $JENKINS_TUNNEL"
+        fi
+    fi
+
+    if [ -n "$JENKINS_URL" ]; then
+        URL="-url $JENKINS_URL"
+    fi
+
+    if [ -z "$JNLP_PROTOCOL_OPTS" ]; then
+        echo "Warning: JnlpProtocol3 is disabled by default, use JNLP_PROTOCOL_OPTS to alter the behavior"
+        JNLP_PROTOCOL_OPTS="-Dorg.jenkinsci.remoting.engine.JnlpProtocol3.disabled=true"
+    fi
+
+    exec java $JAVA_OPTS $JNLP_PROTOCOL_OPTS -cp /usr/share/jenkins/slave.jar hudson.remoting.jnlp.Main -headless $TUNNEL $URL $JENKINS_SECRET $JENKINS_AGENT_NAME "$@"
 fi
-exec "$@" &
-exec java $JAVA_OPTS $JNLP_PROTOCOL_OPTS -cp /usr/share/jenkins/slave.jar hudson.remoting.jnlp.Main -headless $TUNNEL $URL $JENKINS_SECRET $JENKINS_AGENT_NAME

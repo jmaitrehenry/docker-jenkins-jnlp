@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [[ ! -z "$@" ]]; then
+  for image in "$@"; do
+    docker pull $image
+  done
+fi
