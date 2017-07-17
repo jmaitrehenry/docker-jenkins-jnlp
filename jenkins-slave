@@ -4,6 +4,10 @@ if [[ ! -z $DOCKER_PRELOAD_IMAGES ]]; then
   preload-docker-images $DOCKER_PRELOAD_IMAGES &
 fi;
 
+if [[ ! -z $JENKINS_REMOTE_FS ]]; then
+  JENKINS_REMOTE_FS=/ci/jenkins
+fi;
+
 # Download slave.jar. This ensures that everytime this daemon is loaded, we get the correct slave.jar
 # from the Master. We loop endlessly to get the jar, so that if we start before networking, we ensure
 # the jar gets loaded anyway.
@@ -27,7 +31,7 @@ cat <<EOF | java -jar jenkins-cli.jar -s "$JENKINS_URL" -auth ${USER} create-nod
      <retentionStrategy class="hudson.slaves.RetentionStrategy\$Always"/>
      <launcher class="hudson.slaves.JNLPLauncher"/>
      <label>${LABELS}</label>
-   <remoteFS>/tmp/jenkins</remoteFS>
+   <remoteFS>${JENKINS_REMOTE_FS}</remoteFS>
      <nodeProperties/>
    <userId>${USER}</userId>
 </slave>
