@@ -4,7 +4,7 @@ if [[ ! -z $DOCKER_PRELOAD_IMAGES ]]; then
   preload-docker-images $DOCKER_PRELOAD_IMAGES &
 fi;
 
-if [[ ! -z $JENKINS_REMOTE_FS ]]; then
+if [[ -z $JENKINS_REMOTE_FS ]]; then
   JENKINS_REMOTE_FS=/ci/jenkins
 fi;
 
