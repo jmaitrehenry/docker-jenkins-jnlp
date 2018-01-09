@@ -8,6 +8,13 @@ if [[ -z $JENKINS_REMOTE_FS ]]; then
   JENKINS_REMOTE_FS=/ci/jenkins
 fi;
 
+if [[ -z $JENKINS_KNOWN_HOSTS ]]; then
+  $hosts=`echo tr ';' '\n' <<< $JENKINS_KNOWN_HOSTS`
+  while read line; do
+    echo $line >>  ~/.ssh/known_hosts
+  done <<< $hosts
+fi;
+
 # Download slave.jar. This ensures that everytime this daemon is loaded, we get the correct slave.jar
 # from the Master. We loop endlessly to get the jar, so that if we start before networking, we ensure
 # the jar gets loaded anyway.
